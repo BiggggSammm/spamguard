@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="row justify-content-center sg-fade-in">
+    <div class="col-md-8 col-lg-6">
+
+        <span class="sg-label text-center d-block mb-3">ANALYSIS COMPLETE</span>
+
+        <!-- Verdict Card — data-verdict drives border color via CSS -->
+        <div class="sg-card text-center mb-3 verdict-card"
+             data-verdict="{{ prediction | lower }}">
+
+            <div style="font-size: 3.5rem; margin-bottom: 0.5rem;">
+                {{ '🚨' if prediction == 'Spam' else '✅' }}
+            </div>
+
+            <span class="sg-label" style="display: flex; justify-content: center;">VERDICT</span>
+
+            <h2 class="font-mono {{ 'text-spam' if prediction == 'Spam' else 'text-ham' }}"
+                style="font-size: 2.5rem; font-weight: 700; letter-spacing: 4px;">
+                {{ prediction | upper }}
+            </h2>
+
+            <!-- Confidence bar -->
+            <div style="margin: 1.5rem auto 0; max-width: 320px;">
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="sg-label" style="margin-bottom: 0;">CONFIDENCE</span>
+                    <span class="font-mono {{ 'text-spam' if prediction == 'Spam' else 'text-ham' }}"
+                          style="font-size: 0.7rem;">
+                        {{ confidence }}%
+                    </span>
+                </div>
+                <div class="sg-confidence-track">
+                    <!-- data-verdict drives fill color, width set via JS below -->
+                    <div class="sg-confidence-fill"
+                         data-verdict="{{ prediction | lower }}"
+                         data-width="{{ confidence }}">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Flagged Links -->
+        {% if flagged_links %}
+        <div class="sg-card mb-3 warning-card">
+            <span class="sg-label warning-label">⚠ SUSPICIOUS LINKS DETECTED</span>
+            <ul style="padding: 0; margin: 0;">
+                {% for link in flagged_links %}
+                <li class="sg-link-item">🔗 {{ link }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- Feedback -->
+        <div class="sg-card mb-3">
+            <span class="sg-label">// WAS THIS CORRECT?</span>
+            <p class="text-muted-sg" style="font-size: 0.85rem; margin-bottom: 1rem;">
+                Help improve the model by letting us know if this prediction was wrong.
+            </p>
+            <form method="POST" action="{{ url_for('feedback') }}">
+                <input type="hidden" name="entry_id" value="{{ entry_id }}">
+                <textarea name="suggestion" class="sg-textarea" rows="3"
+                          placeholder="e.g. This is actually a legitimate message from my bank..."></textarea>
+                <div style="margin-top: 1rem;">
+                    <button type="submit" class="btn-sg-ghost" style="width: 100%;">
+                        SUBMIT FEEDBACK
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Back button -->
+        <div class="text-center">
+            <a href="{{ url_for('index') }}" class="btn-sg-primary"
+               style="width: auto; padding: 0.85rem 2.5rem;">
+                ← ANALYSE ANOTHER MESSAGE
+            </a>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Set confidence bar width from data attribute — avoids Jinja inside style=""
+    const fill = document.querySelector('.sg-confidence-fill');
+    if (fill) {
+        fill.style.width = fill.dataset.width + '%';
+    }
+</script>
+{% endblock %}

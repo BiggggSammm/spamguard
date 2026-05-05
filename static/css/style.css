@@ -1,0 +1,421 @@
+/* ============================================================
+   SpamGuard — Main Stylesheet
+   File: static/css/style.css
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+/* ── CSS Variables ─────────────────────────────────────────── */
+:root {
+    --bg:       #080e1a;
+    --surface:  #0e1824;
+    --card:     #111d2e;
+    --border:   #1e3048;
+    --accent:   #00e5ff;
+    --accent2:  #7b61ff;
+    --spam:     #ff4d6d;
+    --ham:      #00e096;
+    --text:     #e8f0fe;
+    --muted:    #607080;
+    --mono:     'Space Mono', monospace;
+    --sans:     'DM Sans', sans-serif;
+}
+
+/* ── Reset & Base ───────────────────────────────────────────── */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg);
+    font-family: var(--sans);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* ── Animated Grid Background ───────────────────────────────── */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.4;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* ── Glowing Orb ────────────────────────────────────────────── */
+body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    left: -200px;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(0,229,255,0.06) 0%, transparent 70%);
+    z-index: 0;
+    pointer-events: none;
+    animation: drift 12s ease-in-out infinite alternate;
+}
+
+@keyframes drift {
+    to { transform: translate(120px, 80px); }
+}
+
+.container {
+    position: relative;
+    z-index: 1;
+}
+
+/* ── Navbar ─────────────────────────────────────────────────── */
+.sg-nav {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.2rem 2rem;
+    border-bottom: 1px solid var(--border);
+    background: rgba(8,14,26,0.85);
+    backdrop-filter: blur(12px);
+}
+
+.sg-logo {
+    font-family: var(--mono);
+    font-size: 1.1rem;
+    color: var(--accent);
+    text-decoration: none;
+    letter-spacing: 2px;
+}
+
+.sg-logo span {
+    color: var(--text);
+}
+
+.sg-nav-links a {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 1px;
+    margin-left: 1.5rem;
+    transition: color 0.2s;
+}
+
+.sg-nav-links a:hover {
+    color: var(--accent);
+}
+
+/* ── Cards ──────────────────────────────────────────────────── */
+.sg-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.sg-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+
+/* ── Textarea ───────────────────────────────────────────────── */
+.sg-textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 0.95rem;
+    padding: 1rem;
+    resize: vertical;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+}
+
+.sg-textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,229,255,0.1);
+}
+
+.sg-textarea::placeholder {
+    color: var(--muted);
+}
+
+/* ── Buttons ────────────────────────────────────────────────── */
+.btn-sg-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #000;
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    border: none;
+    border-radius: 8px;
+    padding: 0.85rem 2rem;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+    width: 100%;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+.btn-sg-primary:hover {
+    opacity: 0.88;
+    transform: translateY(-1px);
+    color: #000;
+}
+
+.btn-sg-primary:active {
+    transform: translateY(0);
+}
+
+.btn-sg-ghost {
+    background: transparent;
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.7rem 1.5rem;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+.btn-sg-ghost:hover {
+    border-color: var(--accent);
+    background: rgba(0,229,255,0.05);
+    color: var(--accent);
+}
+
+.btn-sg-danger {
+    background: transparent;
+    color: var(--spam);
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    border: 1px solid var(--spam);
+    border-radius: 8px;
+    padding: 0.5rem 1.2rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-sg-danger:hover {
+    background: rgba(255,77,109,0.1);
+    color: var(--spam);
+}
+
+/* ── Labels ─────────────────────────────────────────────────── */
+.sg-label {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+    display: block;
+}
+
+/* ── Feature Pills ──────────────────────────────────────────── */
+.sg-pill {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 0.3rem 0.9rem;
+}
+
+/* ── Confidence Bar ─────────────────────────────────────────── */
+.sg-confidence-track {
+    background: var(--surface);
+    border-radius: 99px;
+    height: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+.sg-confidence-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 1s ease;
+}
+
+.sg-confidence-fill.spam {
+    background: var(--spam);
+    box-shadow: 0 0 10px rgba(255,77,109,0.6);
+}
+
+.sg-confidence-fill.ham {
+    background: var(--ham);
+    box-shadow: 0 0 10px rgba(0,224,150,0.6);
+}
+
+/* ── Link Item ──────────────────────────────────────────────── */
+.sg-link-item {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.6rem 0.9rem;
+    margin-top: 0.5rem;
+    word-break: break-all;
+    list-style: none;
+}
+
+/* ── Flash / Alert Messages ─────────────────────────────────── */
+.sg-alert {
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    font-size: 0.88rem;
+    margin-bottom: 1rem;
+    border-left: 3px solid;
+}
+
+.sg-alert-success {
+    background: rgba(0,224,150,0.08);
+    border-color: var(--ham);
+    color: var(--ham);
+}
+
+.sg-alert-danger {
+    background: rgba(255,77,109,0.08);
+    border-color: var(--spam);
+    color: var(--spam);
+}
+
+.sg-alert-warning {
+    background: rgba(255,193,7,0.08);
+    border-color: #ffc107;
+    color: #ffc107;
+}
+
+.sg-alert-info {
+    background: rgba(0,229,255,0.08);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* ── Admin Table ────────────────────────────────────────────── */
+.sg-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+}
+
+.sg-table th {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+    padding: 0.5rem 0.8rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+.sg-table td {
+    padding: 0.7rem 0.8rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.sg-table tr:hover td {
+    background: rgba(0,229,255,0.03);
+}
+
+/* ── File Input ─────────────────────────────────────────────── */
+.sg-file-input {
+    display: block;
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 0.6rem 0.8rem;
+    font-size: 0.85rem;
+    margin-bottom: 1.2rem;
+    cursor: pointer;
+}
+
+/* ── Modal ──────────────────────────────────────────────────── */
+.modal-content {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 12px;
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--border);
+}
+
+.modal-footer {
+    border-top: 1px solid var(--border);
+}
+
+.modal-title {
+    font-family: var(--mono);
+    font-size: 0.95rem;
+    color: var(--accent);
+}
+
+.btn-close {
+    filter: invert(1);
+}
+
+/* ── Page Entry Animation ───────────────────────────────────── */
+.sg-fade-in {
+    animation: fadeUp 0.5s ease both;
+}
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Utility ────────────────────────────────────────────────── */
+.text-accent  { color: var(--accent); }
+.text-spam    { color: var(--spam); }
+.text-ham     { color: var(--ham); }
+.text-muted-sg { color: var(--muted); }
+.font-mono    { font-family: var(--mono); }
+
+/* ── Verdict-driven colors via data attribute ───────────────── */
+/* These replace inline Jinja style="" on result.html           */
+.verdict-card[data-verdict="spam"] { border-color: var(--spam); }
+.verdict-card[data-verdict="ham"]  { border-color: var(--ham); }
+
+.sg-confidence-fill[data-verdict="spam"] {
+    background: var(--spam);
+    box-shadow: 0 0 10px rgba(255,77,109,0.6);
+}
+.sg-confidence-fill[data-verdict="ham"] {
+    background: var(--ham);
+    box-shadow: 0 0 10px rgba(0,224,150,0.6);
+}
+
+/* ── Warning card (flagged links) ───────────────────────────── */
+.warning-card  { border-color: #ffc107; }
+.warning-label { color: #ffc107; }

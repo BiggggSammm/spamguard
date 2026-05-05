@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="sg-fade-in">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <span class="sg-label">ADMIN PANEL</span>
+            <h2 class="font-mono text-accent" style="font-size: 1.4rem; letter-spacing: 2px;">
+                MODEL MANAGEMENT
+            </h2>
+        </div>
+        <a href="{{ url_for('auth.logout') }}" class="btn-sg-danger">LOGOUT</a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="sg-alert sg-alert-{{ 'success' if category == 'success' else 'danger' if category == 'danger' else 'warning' if category == 'warning' else 'info' }}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="row g-4">
+
+        <!-- Retrain form -->
+        <div class="col-lg-4">
+            <div class="sg-card h-100">
+                <span class="sg-label">// RETRAIN MODEL</span>
+                <p class="text-muted-sg" style="font-size: 0.85rem; margin-bottom: 1.2rem; line-height: 1.6;">
+                    Upload a CSV with <code class="text-accent">text</code> and
+                    <code class="text-accent">label</code> columns (ham/spam).
+                    Retrains on 80%, evaluates on 20%. New model is inactive until you activate it.
+                </p>
+                <form method="POST" action="{{ url_for('admin.retrain') }}" enctype="multipart/form-data">
+                    <span class="sg-label">SELECT CSV FILE</span>
+                    <input type="file" name="file" accept=".csv" required class="sg-file-input">
+                    <button type="submit" class="btn-sg-primary">
+                        ⚙ &nbsp; UPLOAD & RETRAIN
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Model versions table -->
+        <div class="col-lg-8">
+            <div class="sg-card">
+                <span class="sg-label">// MODEL VERSIONS</span>
+                {% if models %}
+                <div style="overflow-x: auto; margin-top: 0.5rem;">
+                    <table class="sg-table">
+                        <thead>
+                            <tr>
+                                <th>VERSION</th>
+                                <th>ACCURACY</th>
+                                <th>PRECISION</th>
+                                <th>RECALL</th>
+                                <th>F1-SCORE</th>
+                                <th>DATASET</th>
+                                <th>TRAINED</th>
+                                <th>STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for model in models %}
+                            <tr>
+                                <td>
+                                    <span class="font-mono text-accent" style="font-size: 0.82rem;">
+                                        {{ model.version }}
+                                    </span>
+                                </td>
+                                <td class="font-mono text-ham">
+                                    {{ "%.2f%%"|format(model.accuracy * 100) if model.accuracy else 'N/A' }}
+                                </td>
+                                <td class="font-mono">
+                                    {{ "%.4f"|format(model.precision) if model.precision else 'N/A' }}
+                                </td>
+                                <td class="font-mono">
+                                    {{ "%.4f"|format(model.recall) if model.recall else 'N/A' }}
+                                </td>
+                                <td class="font-mono">
+                                    {{ "%.4f"|format(model.f1_score) if model.f1_score else 'N/A' }}
+                                </td>
+                                <td class="text-muted-sg">
+                                    {{ model.dataset_size | default('—') }}
+                                </td>
+                                <td class="text-muted-sg" style="font-size: 0.78rem;">
+                                    {{ model.trained_on.strftime('%Y-%m-%d %H:%M') }}
+                                </td>
+                                <td>
+                                    {% if model.is_active %}
+                                        <!-- Active model — show green badge, no button -->
+                                        <span class="font-mono text-ham" style="font-size: 0.72rem; letter-spacing: 1px;">
+                                            ● ACTIVE
+                                        </span>
+                                    {% else %}
+                                        <!-- Inactive — show Activate button -->
+                                        <form method="POST"
+                                              action="{{ url_for('admin.activate_model', model_id=model.id) }}"
+                                              style="display:inline;">
+                                            <button type="submit" class="btn-sg-ghost"
+                                                    style="padding: 0.3rem 0.8rem; font-size: 0.7rem;">
+                                                ACTIVATE
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted-sg" style="font-size: 0.85rem; margin-top: 0.8rem;">
+                    No models trained yet. Upload a CSV to get started.
+                </p>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="row justify-content-center sg-fade-in">
+    <div class="col-md-8 col-lg-6">
+
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <span class="sg-label">AI-POWERED DETECTION</span>
+            <h1 class="font-mono text-accent" style="font-size: 2rem; letter-spacing: 3px;">
+                SPAMGUARD
+            </h1>
+            <p class="text-muted-sg" style="font-size: 0.9rem; margin-top: 0.5rem;">
+                Paste any SMS or email below. Our Naive Bayes model will analyse it instantly.
+            </p>
+        </div>
+
+        <!-- Main card -->
+        <div class="sg-card">
+            <span class="sg-label">MESSAGE INPUT</span>
+            <form id="predictForm" method="POST" action="{{ url_for('predict') }}">
+                <textarea name="text" class="sg-textarea" rows="7"
+                          placeholder="e.g. Congratulations! You have won a prize. Click http://bit.ly/claim now..."
+                          required></textarea>
+
+                <div class="text-end font-mono text-muted-sg" style="font-size: 0.7rem; margin-top: 0.4rem;">
+                    <span id="charCount">0</span> characters
+                </div>
+
+                <div style="margin-top: 1.5rem;">
+                    <button type="submit" class="btn-sg-primary">
+                        ▶ &nbsp; ANALYSE MESSAGE
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Feature pills -->
+        <div class="text-center mt-4 d-flex gap-2 justify-content-center flex-wrap">
+            <span class="sg-pill">⚡ Naive Bayes</span>
+            <span class="sg-pill">🔗 Link Analysis</span>
+            <span class="sg-pill">📊 Confidence Score</span>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
+
+<!-- Modal is outside the container via its own block -->
+{% block modal %}
+<div class="modal fade" id="consentModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">// DATA USAGE CONSENT</h5>
+      </div>
+      <div class="modal-body text-muted-sg" style="font-size: 0.9rem; line-height: 1.7;">
+        <p>Your submitted text will be stored <strong class="text-accent">anonymously</strong> and may be used to improve the spam detection model.</p>
+        <p class="mt-2">No personal information is collected or linked to your submission.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-sg-ghost" id="cancelBtn">Cancel</button>
+        <button type="button" class="btn-sg-primary" id="consentYes"
+                style="width: auto; padding: 0.7rem 1.5rem;">
+            I Consent →
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const textarea     = document.querySelector('textarea[name="text"]');
+    const counter      = document.getElementById('charCount');
+    const form         = document.getElementById('predictForm');
+    const modalEl      = document.getElementById('consentModal');
+    const consentModal = new bootstrap.Modal(modalEl);
+
+    // Live character counter
+    textarea.addEventListener('input', () => counter.textContent = textarea.value.length);
+
+    // Intercept form submit — show consent modal first
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        consentModal.show();
+    });
+
+    // Cancel — close modal, don't submit
+    document.getElementById('cancelBtn').addEventListener('click', function () {
+        consentModal.hide();
+    });
+
+    // Consent — close modal then submit
+    document.getElementById('consentYes').addEventListener('click', function () {
+        consentModal.hide();
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            form.submit();
+        }, { once: true });
+    });
+</script>
+{% endblock %}
