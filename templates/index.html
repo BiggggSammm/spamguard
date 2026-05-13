@@ -37,9 +37,9 @@
 
         <!-- Feature pills -->
         <div class="text-center mt-4 d-flex gap-2 justify-content-center flex-wrap">
-            <span class="sg-pill">⚡ Naive Bayes</span>
-            <span class="sg-pill">🔗 Link Analysis</span>
-            <span class="sg-pill">📊 Confidence Score</span>
+            <span class="sg-pill"> Naive Bayes</span>
+            <span class="sg-pill"> Link Analysis</span>
+            <span class="sg-pill"> Confidence Score</span>
         </div>
 
     </div>
@@ -77,14 +77,24 @@
     const counter      = document.getElementById('charCount');
     const form         = document.getElementById('predictForm');
     const modalEl      = document.getElementById('consentModal');
-    const consentModal = new bootstrap.Modal(modalEl);
+    const consentModal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: false });
+
+    const CONSENT_KEY  = 'spamguard_consent_given';
 
     // Live character counter
     textarea.addEventListener('input', () => counter.textContent = textarea.value.length);
 
-    // Intercept form submit — show consent modal first
+    // Intercept form submit
     form.addEventListener('submit', function (e) {
         e.preventDefault();
+
+        // Already consented in a previous session — skip the modal entirely
+        if (localStorage.getItem(CONSENT_KEY) === 'true') {
+            form.submit();
+            return;
+        }
+
+        // First visit — show consent modal
         consentModal.show();
     });
 
@@ -93,8 +103,9 @@
         consentModal.hide();
     });
 
-    // Consent — close modal then submit
+    // Consent — save to localStorage so we never ask again, then submit
     document.getElementById('consentYes').addEventListener('click', function () {
+        localStorage.setItem(CONSENT_KEY, 'true');
         consentModal.hide();
         modalEl.addEventListener('hidden.bs.modal', function () {
             form.submit();

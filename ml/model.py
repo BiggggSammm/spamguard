@@ -3,9 +3,10 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.model_selection import train_test_split
 
+
 class SpamClassifier:
     def __init__(self):
-        self.model = None
+        self.model      = None
         self.vectorizer = None
 
     def train(self, df):
@@ -19,19 +20,12 @@ class SpamClassifier:
         return self.model.score(X_test, y_test)
 
     def predict(self, text, link_features=''):
-        full_text = text + ' ' + link_features
-        vec = self.vectorizer.transform([full_text])
-
-        pred = self.model.predict(vec)[0]          # 0 = ham, 1 = spam
-
-        # predict_proba returns [ham_prob, spam_prob]
-        # index [0] = probability it is Ham
-        # index [1] = probability it is Spam
-        # We always want to show the confidence of the WINNING prediction,
-        # so we use pred itself as the index — if pred=0 (ham), show ham prob;
-        # if pred=1 (spam), show spam prob.
-        prob = self.model.predict_proba(vec)[0][pred]
-
+        vec   = self.vectorizer.transform([text + ' ' + link_features])
+        pred  = self.model.predict(vec)[0]          # 0 or 1
+        proba = self.model.predict_proba(vec)[0]    # [prob_ham, prob_spam]
+        # Get probability of the predicted class
+        class_index = list(self.model.classes_).index(pred)
+        prob = proba[class_index]
         return int(pred), float(prob)
 
     def save(self, path='model.pkl'):

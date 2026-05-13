@@ -121,6 +121,102 @@
         </div>
 
     </div>
+
+    <!-- Account Settings -->
+    <div class="row g-4 mt-2">
+
+        <div class="col-lg-6">
+            <div class="sg-card h-100">
+                <span class="sg-label">// CHANGE USERNAME</span>
+                <p class="text-muted-sg" style="font-size: 0.85rem; margin-bottom: 1.2rem; line-height: 1.6;">
+                    Update the admin username. You will be logged out automatically.
+                </p>
+                <div id="usernameAlert" style="display:none; margin-bottom: 1rem;"></div>
+                <span class="sg-label">NEW USERNAME</span>
+                <input type="text" id="newUsername" class="sg-input mt-1" placeholder="Enter new username">
+                <span class="sg-label" style="display:block; margin-top: 0.8rem;">CURRENT PASSWORD</span>
+                <input type="password" id="usernamePassword" class="sg-input mt-1" placeholder="Confirm with your current password">
+                <button onclick="changeUsername()" class="btn-sg-primary mt-3">👤 &nbsp; UPDATE USERNAME</button>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="sg-card h-100">
+                <span class="sg-label">// CHANGE PASSWORD</span>
+                <p class="text-muted-sg" style="font-size: 0.85rem; margin-bottom: 1.2rem; line-height: 1.6;">
+                    Update your admin password. Use at least 8 characters.
+                </p>
+                <div id="passwordAlert" style="display:none; margin-bottom: 1rem;"></div>
+                <span class="sg-label">CURRENT PASSWORD</span>
+                <input type="password" id="currentPassword" class="sg-input mt-1" placeholder="Enter current password">
+                <span class="sg-label" style="display:block; margin-top: 0.8rem;">NEW PASSWORD</span>
+                <input type="password" id="newPassword" class="sg-input mt-1" placeholder="Minimum 8 characters">
+                <span class="sg-label" style="display:block; margin-top: 0.8rem;">CONFIRM NEW PASSWORD</span>
+                <input type="password" id="confirmPassword" class="sg-input mt-1" placeholder="Repeat new password">
+                <button onclick="changePassword()" class="btn-sg-primary mt-3">🔒 &nbsp; UPDATE PASSWORD</button>
+            </div>
+        </div>
+
+    </div>
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function showAlert(containerId, msg, type) {
+        const el  = document.getElementById(containerId);
+        const cls = { success: 'sg-alert-success', danger: 'sg-alert-danger',
+                      warning: 'sg-alert-warning', info: 'sg-alert-info' }[type] || 'sg-alert-info';
+        el.className = 'sg-alert ' + cls;
+        el.textContent = msg;
+        el.style.display = 'block';
+    }
+
+    async function changeUsername() {
+        const newUsername = document.getElementById('newUsername').value.trim();
+        const password    = document.getElementById('usernamePassword').value;
+        if (!newUsername) { showAlert('usernameAlert', 'Please enter a new username.', 'warning'); return; }
+        if (!password)    { showAlert('usernameAlert', 'Please confirm with your current password.', 'warning'); return; }
+        try {
+            const res  = await fetch('/admin/change-username', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ new_username: newUsername, password })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showAlert('usernameAlert', '✓ Username updated! Logging you out...', 'success');
+                setTimeout(() => window.location.href = '/auth/logout', 2000);
+            } else {
+                showAlert('usernameAlert', data.error || 'Could not update username.', 'danger');
+            }
+        } catch { showAlert('usernameAlert', 'Server error. Please try again.', 'danger'); }
+    }
+
+    async function changePassword() {
+        const current = document.getElementById('currentPassword').value;
+        const newPass = document.getElementById('newPassword').value;
+        const confirm = document.getElementById('confirmPassword').value;
+        if (!current)           { showAlert('passwordAlert', 'Enter your current password.', 'warning'); return; }
+        if (newPass.length < 8) { showAlert('passwordAlert', 'New password must be at least 8 characters.', 'warning'); return; }
+        if (newPass !== confirm) { showAlert('passwordAlert', 'Passwords do not match.', 'danger'); return; }
+        try {
+            const res  = await fetch('/admin/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ current_password: current, new_password: newPass })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showAlert('passwordAlert', '✓ Password updated successfully!', 'success');
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+            } else {
+                showAlert('passwordAlert', data.error || 'Could not update password.', 'danger');
+            }
+        } catch { showAlert('passwordAlert', 'Server error. Please try again.', 'danger'); }
+    }
+</script>
 {% endblock %}

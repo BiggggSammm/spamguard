@@ -8,40 +8,59 @@
 
         <!-- Verdict Card — data-verdict drives border color via CSS -->
         <div class="sg-card text-center mb-3 verdict-card"
-             data-verdict="{{ prediction | lower }}">
+             data-verdict="{{ verdict | lower }}">
 
             <div style="font-size: 3.5rem; margin-bottom: 0.5rem;">
-                {{ '🚨' if prediction == 'Spam' else '✅' }}
+                {{ '🚨' if verdict == 'Spam' else '✅' }}
             </div>
 
             <span class="sg-label" style="display: flex; justify-content: center;">VERDICT</span>
 
-            <h2 class="font-mono {{ 'text-spam' if prediction == 'Spam' else 'text-ham' }}"
+            <h2 class="font-mono {{ 'text-spam' if verdict == 'Spam' else 'text-ham' }}"
                 style="font-size: 2.5rem; font-weight: 700; letter-spacing: 4px;">
-                {{ prediction | upper }}
+                {{ verdict | upper }}
             </h2>
 
-            <!-- Confidence bar -->
+            <!-- Confidence bar for TEXT analysis only (not for rule‑based or pure URL) -->
+            {% if text_confidence is not none %}
             <div style="margin: 1.5rem auto 0; max-width: 320px;">
                 <div class="d-flex justify-content-between mb-1">
-                    <span class="sg-label" style="margin-bottom: 0;">CONFIDENCE</span>
-                    <span class="font-mono {{ 'text-spam' if prediction == 'Spam' else 'text-ham' }}"
+                    <span class="sg-label" style="margin-bottom: 0;">TEXT CONFIDENCE</span>
+                    <span class="font-mono {{ 'text-spam' if verdict == 'Spam' else 'text-ham' }}"
                           style="font-size: 0.7rem;">
-                        {{ confidence }}%
+                        {{ (text_confidence * 100)|round(1) }}%
                     </span>
                 </div>
                 <div class="sg-confidence-track">
-                    <!-- data-verdict drives fill color, width set via JS below -->
                     <div class="sg-confidence-fill"
-                         data-verdict="{{ prediction | lower }}"
-                         data-width="{{ confidence }}">
+                         data-verdict="{{ verdict | lower }}"
+                         data-width="{{ (text_confidence * 100)|round(1) }}">
                     </div>
                 </div>
             </div>
-
+            {% else %}
+            <!-- No confidence bar for pure URL or rule‑based verdicts -->
+            <div style="margin-top: 1rem; font-size: 0.8rem; color: #6c757d;">
+                (Verdict based on link analysis)
+            </div>
+            {% endif %}
         </div>
 
-        <!-- Flagged Links -->
+        <!-- Detailed Link Analysis Section (always shown if there were links) -->
+        {% if link_analysis and link_analysis|length > 0 %}
+        <div class="sg-card mb-3">
+            <span class="sg-label">🔍 LINK ANALYSIS</span>
+            <ul style="padding: 0; margin: 0; list-style: none;">
+                {% for msg in link_analysis %}
+                <li class="sg-link-item" style="margin-bottom: 0.5rem;">
+                    {{ msg | safe }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- Flagged Links (suspicious only, if any) -->
         {% if flagged_links %}
         <div class="sg-card mb-3 warning-card">
             <span class="sg-label warning-label">⚠ SUSPICIOUS LINKS DETECTED</span>
@@ -86,9 +105,8 @@
 
 {% block scripts %}
 <script>
-    // Set confidence bar width from data attribute — avoids Jinja inside style=""
     const fill = document.querySelector('.sg-confidence-fill');
-    if (fill) {
+    if (fill && fill.dataset.width) {
         fill.style.width = fill.dataset.width + '%';
     }
 </script>

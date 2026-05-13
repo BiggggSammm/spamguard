@@ -28,12 +28,18 @@
     padding: 0;
 }
 
+html {
+    overflow-x: hidden;
+    max-width: 100%;
+}
+
 body {
     background-color: var(--bg);
     font-family: var(--sans);
     color: var(--text);
     min-height: 100vh;
     overflow-x: hidden;
+    max-width: 100%;
 }
 
 /* ── Animated Grid Background ───────────────────────────────── */
@@ -84,6 +90,8 @@ body::after {
     border-bottom: 1px solid var(--border);
     background: rgba(8,14,26,0.85);
     backdrop-filter: blur(12px);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .sg-logo {
@@ -419,3 +427,62 @@ body::after {
 /* ── Warning card (flagged links) ───────────────────────────── */
 .warning-card  { border-color: #ffc107; }
 .warning-label { color: #ffc107; }
+
+/* ── Mobile overflow fixes ──────────────────────────────────── */
+@media (max-width: 576px) {
+    .sg-nav {
+        padding: 1rem;
+    }
+    .sg-nav-links a {
+        margin-left: 0.8rem;
+        font-size: 0.7rem;
+    }
+    .sg-card {
+        padding: 1.25rem;
+    }
+    .sg-pill {
+        font-size: 0.65rem;
+        padding: 0.25rem 0.6rem;
+    }
+}
+
+/* ── OTP / Forgot password section ─────────────────────────── */
+#forgot-section {
+    scroll-margin-top: 2rem;
+}
+
+.sg-otp-step {
+    display: none;
+}
+.sg-otp-step.active {
+    display: block;
+}
+
+.sg-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2rem 0;
+}
+
+.sg-input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 0.95rem;
+    padding: 0.75rem 1rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+}
+
+.sg-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,229,255,0.1);
+}
+
+.sg-input::placeholder {
+    color: var(--muted);
+}

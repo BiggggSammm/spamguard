@@ -34,7 +34,6 @@
                 <!-- Login card -->
                 <div class="sg-card">
 
-                    <!-- Flash messages -->
                     {% with messages = get_flashed_messages(with_categories=true) %}
                       {% if messages %}
                         {% for category, message in messages %}
@@ -66,20 +65,229 @@
                         </button>
 
                     </form>
+
+                    <!-- Forgot password link -->
+                    <div class="text-center mt-3">
+                        <a href="#forgot-section" id="forgotLink"
+                           style="font-family: var(--mono); font-size: 0.72rem; color: var(--muted);
+                                  letter-spacing: 1px; text-decoration: none; transition: color 0.2s;">
+                            FORGOT PASSWORD?
+                        </a>
+                    </div>
+
                 </div>
 
                 <!-- Back link -->
                 <div class="text-center mt-3">
-                    <a href="{{ url_for('index') }}" class="btn-sg-ghost"
-                       style="font-size: 0.75rem;">
+                    <a href="{{ url_for('index') }}" class="btn-sg-ghost" style="font-size: 0.75rem;">
                         ← Back to SpamGuard
                     </a>
                 </div>
 
             </div>
         </div>
-    </div>
+
+        <!-- ── Forgot Password / OTP Section ─────────────────────── -->
+        <div class="row justify-content-center mt-5" id="forgot-section">
+            <div class="col-md-6 col-lg-4">
+
+                <hr class="sg-divider">
+
+                <div class="text-center mb-4">
+                    <span class="sg-label">ACCOUNT RECOVERY</span>
+                    <h2 class="font-mono text-accent" style="font-size: 1.3rem; letter-spacing: 2px;">
+                        RESET PASSWORD
+                    </h2>
+                    <p class="text-muted-sg" style="font-size: 0.82rem; margin-top: 0.4rem;">
+                        Enter your admin email to receive a one-time code.
+                    </p>
+                </div>
+
+                <div id="otpAlert" style="display:none;"></div>
+
+                <div class="sg-card">
+
+                    <!-- Step 1: Email -->
+                    <div id="step-email" class="sg-otp-step active">
+                        <span class="sg-label">ADMIN EMAIL</span>
+                        <input type="email" id="otpEmail" class="sg-input mt-1"
+                               placeholder="admin@example.com">
+                        <button onclick="requestOtp()" class="btn-sg-primary mt-3">
+                            ✉ &nbsp; SEND OTP CODE
+                        </button>
+                    </div>
+
+                    <!-- Step 2: Enter code -->
+                    <div id="step-otp" class="sg-otp-step">
+                        <p class="text-muted-sg" style="font-size: 0.82rem; margin-bottom: 1rem;">
+                            A 6-digit code was sent to your email. Expires in
+                            <strong class="text-accent" id="countdown">10:00</strong>.
+                        </p>
+                        <span class="sg-label">ENTER OTP CODE</span>
+                        <input type="text" id="otpCode" class="sg-input mt-1 font-mono"
+                               placeholder="000000" maxlength="6"
+                               style="letter-spacing: 8px; font-size: 1.3rem; text-align: center;">
+                        <button onclick="verifyOtp()" class="btn-sg-primary mt-3">
+                            🔍 &nbsp; VERIFY CODE
+                        </button>
+                        <div class="text-center mt-2">
+                            <button onclick="goBack('step-email')" class="btn-sg-ghost"
+                                    style="font-size: 0.72rem; padding: 0.4rem 1rem;">
+                                ← CHANGE EMAIL
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: New password -->
+                    <div id="step-newpass" class="sg-otp-step">
+                        <p class="text-muted-sg" style="font-size: 0.82rem; margin-bottom: 1.2rem;">
+                            OTP verified. Set your new password below.
+                        </p>
+                        <span class="sg-label">NEW PASSWORD</span>
+                        <input type="password" id="newPassword" class="sg-input mt-1"
+                               placeholder="Minimum 8 characters">
+                        <span class="sg-label" style="display:block; margin-top: 0.8rem;">CONFIRM PASSWORD</span>
+                        <input type="password" id="confirmPassword" class="sg-input mt-1"
+                               placeholder="Repeat new password">
+                        <button onclick="resetPassword()" class="btn-sg-primary mt-3">
+                            🔒 &nbsp; UPDATE PASSWORD
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /container -->
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let countdownInterval = null;
+
+        // Smooth scroll on "Forgot Password?" click
+        document.getElementById('forgotLink').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('forgot-section').scrollIntoView({ behavior: 'smooth' });
+        });
+
+        // Colour change on hover
+        const fl = document.getElementById('forgotLink');
+        fl.addEventListener('mouseenter', () => fl.style.color = 'var(--accent)');
+        fl.addEventListener('mouseleave', () => fl.style.color = 'var(--muted)');
+
+        // ── Helpers ────────────────────────────────────────────────
+        function showAlert(msg, type) {
+            const el  = document.getElementById('otpAlert');
+            const cls = { success: 'sg-alert-success', danger: 'sg-alert-danger',
+                          warning: 'sg-alert-warning', info: 'sg-alert-info' }[type] || 'sg-alert-info';
+            el.className = 'sg-alert ' + cls;
+            el.textContent = msg;
+            el.style.display = 'block';
+            el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function hideAlert() { document.getElementById('otpAlert').style.display = 'none'; }
+
+        function showStep(id) {
+            document.querySelectorAll('.sg-otp-step').forEach(el => el.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function goBack(id) {
+            hideAlert();
+            if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+            showStep(id);
+        }
+
+        function startCountdown(seconds) {
+            if (countdownInterval) clearInterval(countdownInterval);
+            const el = document.getElementById('countdown');
+            let t = seconds;
+            const tick = () => {
+                const m = String(Math.floor(t / 60)).padStart(2, '0');
+                const s = String(t % 60).padStart(2, '0');
+                el.textContent = m + ':' + s;
+                if (t-- <= 0) {
+                    clearInterval(countdownInterval); countdownInterval = null;
+                    showAlert('OTP expired. Please request a new one.', 'warning');
+                    showStep('step-email');
+                }
+            };
+            tick();
+            countdownInterval = setInterval(tick, 1000);
+        }
+
+        // ── Step 1: Request OTP ────────────────────────────────────
+        async function requestOtp() {
+            const email = document.getElementById('otpEmail').value.trim();
+            if (!email) { showAlert('Please enter your email address.', 'warning'); return; }
+
+            try {
+                const res  = await fetch('/auth/request-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    hideAlert();
+                    showStep('step-otp');
+                    startCountdown(600);
+                } else {
+                    showAlert(data.error || 'Could not send OTP. Check the email address.', 'danger');
+                }
+            } catch { showAlert('Server error. Please try again.', 'danger'); }
+        }
+
+        // ── Step 2: Verify OTP ─────────────────────────────────────
+        async function verifyOtp() {
+            const email = document.getElementById('otpEmail').value.trim();
+            const code  = document.getElementById('otpCode').value.trim();
+            if (code.length !== 6) { showAlert('Enter the full 6-digit code.', 'warning'); return; }
+
+            try {
+                const res  = await fetch('/auth/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, code })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+                    hideAlert();
+                    showStep('step-newpass');
+                } else {
+                    showAlert(data.error || 'Invalid or expired code.', 'danger');
+                }
+            } catch { showAlert('Server error. Please try again.', 'danger'); }
+        }
+
+        // ── Step 3: Reset password ─────────────────────────────────
+        async function resetPassword() {
+            const email    = document.getElementById('otpEmail').value.trim();
+            const code     = document.getElementById('otpCode').value.trim();
+            const newPass  = document.getElementById('newPassword').value;
+            const confPass = document.getElementById('confirmPassword').value;
+
+            if (newPass.length < 8) { showAlert('Password must be at least 8 characters.', 'warning'); return; }
+            if (newPass !== confPass) { showAlert('Passwords do not match.', 'danger'); return; }
+
+            try {
+                const res  = await fetch('/auth/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, code, new_password: newPass })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    showAlert('✓ Password updated successfully! Redirecting...', 'success');
+                    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 1500);
+                    setTimeout(() => window.location.reload(), 2800);
+                } else {
+                    showAlert(data.error || 'Could not update password.', 'danger');
+                }
+            } catch { showAlert('Server error. Please try again.', 'danger'); }
+        }
+    </script>
 </body>
 </html>
